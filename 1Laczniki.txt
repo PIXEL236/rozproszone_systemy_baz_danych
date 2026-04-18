@@ -1,0 +1,233 @@
+--Zadanie 5
+CREATE 
+SYNONYM kursanciSiedziba
+FOR kursanci;
+
+CREATE 
+SYNONYM kursanciFilia
+FOR kursanci@dblinkfilia;
+
+CREATE 
+SYNONYM kursySiedziba
+FOR kursy;
+
+CREATE 
+SYNONYM kursyFilia
+FOR kursy@dblinkfilia;
+
+CREATE 
+SYNONYM rodzajeSiedziba
+FOR rodzaje;
+
+CREATE 
+SYNONYM rodzajeFilia
+FOR rodzaje@dblinkfilia;
+
+CREATE 
+SYNONYM umowySiedziba
+FOR umowy;
+
+CREATE 
+SYNONYM umowyFilia
+FOR umowy@dblinkfilia;
+
+CREATE 
+SYNONYM wykladowcySiedziba
+FOR wykladowcy;
+
+CREATE 
+SYNONYM wykladowcyFilia
+FOR wykladowcy@dblinkfilia;
+
+--Zadanie 6
+CREATE VIEW kursanciAll AS
+select
+  ks.IMIE
+, ks.NAZWISKO
+from kursanciSiedziba ks
+union all
+select
+  kf.IMIE
+, kf.NAZWISKO
+from kursanciFilia kf;
+
+CREATE VIEW wykladowcyAll AS
+select
+  ks.IMIE
+, ks.NAZWISKO
+from wykladowcySiedziba ks
+union all
+select
+  kf.IMIE
+, kf.NAZWISKO
+from wykladowcyFilia kf;
+
+--Zadanie 7
+CREATE VIEW kursyAll AS
+select
+  ks.KURS_ID
+, ws.IMIE
+, ws.NAZWISKO
+, rs.NAZWA
+, COUNT(*) ILOSC_KURSANTOW
+from kursySiedziba ks
+inner join wykladowcySiedziba ws on ws.WYKLADOWCA_ID = ks.WYKLADOWCA_ID
+inner join umowySiedziba us on us.KURS_ID = ks.KURS_ID
+inner join rodzajeSiedziba rs on rs.RODZAJ_ID = ks.RODZAJ_ID
+inner join kursanciSiedziba ks2 on ks2.KURSANT_ID = us.KURSANT_ID
+group by ks.KURS_ID, ws.IMIE, ws.NAZWISKO, rs.NAZWA
+union all
+select
+  ks.KURS_ID
+, ws.IMIE
+, ws.NAZWISKO
+, rs.NAZWA
+, COUNT(*) ILOSC_KURSANTOW
+from kursyFilia ks
+inner join wykladowcyFilia ws on ws.WYKLADOWCA_ID = ks.WYKLADOWCA_ID
+inner join umowyFilia us on us.KURS_ID = ks.KURS_ID
+inner join rodzajeFilia rs on rs.RODZAJ_ID = ks.RODZAJ_ID
+inner join kursanciFilia ks2 on ks2.KURSANT_ID = us.KURSANT_ID
+group by ks.KURS_ID, ws.IMIE, ws.NAZWISKO, rs.NAZWA
+;
+
+--Zadanie 8
+select
+  SUM(a.SUMA) SUMA
+from
+(
+select
+  SUM(rs.CENA) SUMA
+from kursySiedziba ks
+inner join umowySiedziba us on us.KURS_ID = ks.KURS_ID
+inner join rodzajeSiedziba rs on rs.RODZAJ_ID = ks.RODZAJ_ID
+union all
+select
+  SUM(rs.CENA) SUMA
+from kursyFilia ks
+inner join umowyFilia us on us.KURS_ID = ks.KURS_ID
+inner join rodzajeFilia rs on rs.RODZAJ_ID = ks.RODZAJ_ID
+)a
+;
+
+--Zadanie 9
+select
+  SUM(a.SUMA) SUMA
+from
+(
+select
+  SUM(ws.STAWKA) SUMA
+from kursySiedziba ks
+inner join wykladowcySiedziba ws on ws.WYKLADOWCA_ID = ks.WYKLADOWCA_ID
+union all
+select
+  SUM(ws.STAWKA) SUMA
+from kursyFilia ks
+inner join wykladowcyFilia ws on ws.WYKLADOWCA_ID = ks.WYKLADOWCA_ID
+)a
+;
+
+--Zadanie 10
+select
+  ks.KURS_ID
+, a.SUMA - b.SUMA    ZYSK
+from kursySiedziba ks
+inner join
+(
+select
+  ks.KURS_ID
+, SUM(rs.CENA) SUMA
+from kursySiedziba ks
+inner join umowySiedziba us on us.KURS_ID = ks.KURS_ID
+inner join rodzajeSiedziba rs on rs.RODZAJ_ID = ks.RODZAJ_ID
+group by ks.KURS_ID
+)a on a.KURS_ID = ks.KURS_ID
+inner join
+(
+select
+  ks.KURS_ID
+, SUM(ws.STAWKA) SUMA
+from kursySiedziba ks
+inner join wykladowcySiedziba ws on ws.WYKLADOWCA_ID = ks.WYKLADOWCA_ID
+group by ks.KURS_ID
+)b on b.KURS_ID = ks.KURS_ID
+union all
+select
+  ks.KURS_ID
+, a.SUMA - b.SUMA    ZYSK
+from kursyFilia ks
+inner join
+(
+select
+  ks.KURS_ID
+, SUM(rs.CENA) SUMA
+from kursyFilia ks
+inner join umowyFilia us on us.KURS_ID = ks.KURS_ID
+inner join rodzajeFilia rs on rs.RODZAJ_ID = ks.RODZAJ_ID
+group by ks.KURS_ID
+)a on a.KURS_ID = ks.KURS_ID
+inner join
+(
+select
+  ks.KURS_ID
+, SUM(ws.STAWKA) SUMA
+from kursyFilia ks
+inner join wykladowcyFilia ws on ws.WYKLADOWCA_ID = ks.WYKLADOWCA_ID
+group by ks.KURS_ID
+)b on b.KURS_ID = ks.KURS_ID
+;
+
+--Zadanie 11
+select
+  SUM(x.ZYSK)
+from
+(
+select
+  ks.KURS_ID
+, a.SUMA - b.SUMA    ZYSK
+from kursySiedziba ks
+inner join
+(
+select
+  ks.KURS_ID
+, SUM(rs.CENA) SUMA
+from kursySiedziba ks
+inner join umowySiedziba us on us.KURS_ID = ks.KURS_ID
+inner join rodzajeSiedziba rs on rs.RODZAJ_ID = ks.RODZAJ_ID
+group by ks.KURS_ID
+)a on a.KURS_ID = ks.KURS_ID
+inner join
+(
+select
+  ks.KURS_ID
+, SUM(ws.STAWKA) SUMA
+from kursySiedziba ks
+inner join wykladowcySiedziba ws on ws.WYKLADOWCA_ID = ks.WYKLADOWCA_ID
+group by ks.KURS_ID
+)b on b.KURS_ID = ks.KURS_ID
+union all
+select
+  ks.KURS_ID
+, a.SUMA - b.SUMA    ZYSK
+from kursyFilia ks
+inner join
+(
+select
+  ks.KURS_ID
+, SUM(rs.CENA) SUMA
+from kursyFilia ks
+inner join umowyFilia us on us.KURS_ID = ks.KURS_ID
+inner join rodzajeFilia rs on rs.RODZAJ_ID = ks.RODZAJ_ID
+group by ks.KURS_ID
+)a on a.KURS_ID = ks.KURS_ID
+inner join
+(
+select
+  ks.KURS_ID
+, SUM(ws.STAWKA) SUMA
+from kursyFilia ks
+inner join wykladowcyFilia ws on ws.WYKLADOWCA_ID = ks.WYKLADOWCA_ID
+group by ks.KURS_ID
+)b on b.KURS_ID = ks.KURS_ID
+)x
+;
