@@ -80,3 +80,49 @@ BEGIN
   END LOOP;
 END;
 /
+
+--Zadanie 5
+CREATE OR REPLACE PROCEDURE raport_umow_miasto(p_miasto IN VARCHAR2)
+AS
+BEGIN
+  DECLARE
+    v_umowy NUMBER;
+    v_wartoscumow NUMBER;
+    v_sredniawartosc NUMBER;
+  BEGIN
+    select 
+      COUNT(*)
+    into v_umowy
+    from UMOWY u
+    inner join KURSY k on k.KURS_ID = u.KURS_ID
+    inner join RODZAJE r on r.RODZAJ_ID = k.RODZAJ_ID
+    where u.MIASTO = p_miasto;
+    
+    select 
+      SUM(r.CENA)
+    into v_wartoscumow
+    from UMOWY u
+    inner join KURSY k on k.KURS_ID = u.KURS_ID
+    inner join RODZAJE r on r.RODZAJ_ID = k.RODZAJ_ID
+    where u.MIASTO = p_miasto;
+ 
+    select 
+      AVG(r.CENA)
+    into v_sredniawartosc
+    from UMOWY u
+    inner join KURSY k on k.KURS_ID = u.KURS_ID
+    inner join RODZAJE r on r.RODZAJ_ID = k.RODZAJ_ID
+    where u.MIASTO = p_miasto;
+    
+    DBMS_OUTPUT.PUT_LINE('Miasto: ' || p_miasto);
+    DBMS_OUTPUT.PUT_LINE('Ilość umów: ' || v_umowy);
+    DBMS_OUTPUT.PUT_LINE('Wartość umów: ' || v_wartoscumow);
+    DBMS_OUTPUT.PUT_LINE('Średnia wartość umowy: ' || v_sredniawartosc);
+  END;
+END;
+/
+
+BEGIN
+  raport_umow_miasto('BYDGOSZCZ');
+END;
+/
