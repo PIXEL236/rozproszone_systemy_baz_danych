@@ -1,0 +1,82 @@
+--Zadanie 1
+DECLARE
+  v_kursanci NUMBER;
+  v_kursy NUMBER;
+  v_wykladowcy NUMBER;
+BEGIN
+  select 
+    COUNT(*) 
+  into v_kursanci
+  from KURSANCISIEDZIBA;
+
+  select 
+    COUNT(*) 
+  into v_kursy
+  from KURSANCISIEDZIBA;
+  
+  select 
+    COUNT(*) 
+  into v_wykladowcy
+  from WYKLADOWCYSIEDZIBA;
+  
+  DBMS_OUTPUT.PUT_LINE('Liczba kursantów: ' || v_kursanci);
+  DBMS_OUTPUT.PUT_LINE('Liczba kursów: ' || v_kursy);
+  DBMS_OUTPUT.PUT_LINE('Liczba wykadowców: ' || v_wykladowcy);
+END;
+/
+
+--Zadanie 2
+DECLARE
+  v_umowy NUMBER;
+BEGIN
+  select 
+    SUM(r.CENA)
+  into v_umowy
+  from UMOWYSIEDZIBA u
+  inner join KURSYSIEDZIBA k on k.KURS_ID = u.KURS_ID
+  inner join RODZAJESIEDZIBA r on r.RODZAJ_ID = k.RODZAJ_ID
+  where u.MIASTO = 'BYDGOSZCZ';
+  
+  DBMS_OUTPUT.PUT_LINE('Liczba umów: ' || v_umowy);
+END;
+/
+
+--Zadanie 3
+DECLARE
+  v_umowy NUMBER;
+  v_miasto  VARCHAR2(100);
+BEGIN
+  v_miasto := 'BYDGOSZCZ';
+  
+  select 
+    SUM(r.CENA)
+  into v_umowy
+  from UMOWYSIEDZIBA u
+  inner join KURSYSIEDZIBA k on k.KURS_ID = u.KURS_ID
+  inner join RODZAJESIEDZIBA r on r.RODZAJ_ID = k.RODZAJ_ID
+  where u.MIASTO = v_miasto;
+  
+  IF v_umowy = 0 THEN
+    DBMS_OUTPUT.PUT_LINE('Brak umów');
+  ELSIF v_umowy < 50 THEN
+    DBMS_OUTPUT.PUT_LINE('Mała liczba umów');
+  ELSIF v_umowy > 50 and v_umowy < 100 THEN
+    DBMS_OUTPUT.PUT_LINE('Średnia liczba umów');
+  ELSE
+    DBMS_OUTPUT.PUT_LINE('Duża liczba umów');
+  END IF;
+END;
+/
+
+--Zadanie 4
+BEGIN
+  FOR r IN (
+    SELECT k.KURS_ID, r.NAZWA, r.GODZ, r.CENA, w.IMIE, w.NAZWISKO
+    FROM kursy k
+    inner join rodzaje r on r.RODZAJ_ID = k.RODZAJ_ID
+    inner join WYKLADOWCY w on w.WYKLADOWCA_ID = k.WYKLADOWCA_ID
+  ) LOOP
+    DBMS_OUTPUT.PUT_LINE('Kurs id: ' || r.KURS_ID || ' Nazwa rodzaju kursu: ' || r.NAZWA || ' cena kursu: ' || r.CENA || ' Imie i nazwisko wykadowcy: ' || r.IMIE || ' ' || r.NAZWISKO);
+  END LOOP;
+END;
+/
