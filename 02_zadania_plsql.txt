@@ -126,3 +126,54 @@ BEGIN
   raport_umow_miasto('BYDGOSZCZ');
 END;
 /
+
+--Zadanie 6
+CREATE OR REPLACE FUNCTION wartosc_kursu(
+  p_kurs_id IN NUMBER
+)
+RETURN NUMBER
+AS
+  v_liczba NUMBER;
+BEGIN
+  SELECT
+    r.CENA
+  INTO v_liczba
+  FROM KURSY k
+  inner join RODZAJE r on r.RODZAJ_ID = k.RODZAJ_ID
+  WHERE k.KURS_ID = p_kurs_id;
+
+  RETURN v_liczba;
+END;
+/
+
+--Zadanie 7
+CREATE OR REPLACE PROCEDURE pokaz_kursanta(p_kursant_id IN NUMBER)
+AS
+BEGIN
+  DECLARE
+    v_imie VARCHAR2;
+    v_nazwisko VARCHAR2;
+  BEGIN
+    SELECT 
+      k.IMIE
+    INTO v_imie
+    FROM KURSANCI k
+    WHERE k.KURSANT_ID = p_kursant_id;
+
+    SELECT 
+      k.NAZWISKO
+    INTO v_nazwisko
+    FROM KURSANCI k
+    WHERE k.KURSANT_ID = p_kursant_id;
+
+    DBMS_OUTPUT.PUT_LINE(v_imie);
+    DBMS_OUTPUT.PUT_LINE(v_nazwisko);
+
+    EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+      DBMS_OUTPUT.PUT_LINE('Nie znaleziono kursanta.');
+  END;
+END;
+/
+
+--Zadanie 8
