@@ -1,0 +1,180 @@
+--Zadania
+
+--Zadanie 1
+CREATE MATERIALIZED VIEW kursanciSiedzibaMigawka
+REFRESH FORCE
+AS
+select * 
+from KURSANCI@siedziba
+;
+
+--Zadanie 2
+CREATE MATERIALIZED VIEW kursanciOnCommit
+REFRESH ON COMMIT
+AS
+select * 
+from KURSANCI
+;
+
+--Zadanie 3
+CREATE MATERIALIZED VIEW kursyPrzychod
+BUILD IMMEDIATE
+REFRESH COMPLETE
+ON DEMAND
+AS
+select
+  SUM(r.CENA) Przychod
+, SUM(r.CENA) * 0.19 Podatek
+from UMOWY u
+inner join KURSY k on k.KURS_ID = u.KURS_ID
+inner join RODZAJE r on r.RODZAJ_ID = k.RODZAJ_ID
+;
+
+--Zadanie 4
+CREATE MATERIALIZED VIEW kursyPrzychod
+BUILD IMMEDIATE
+REFRESH FAST
+ON COMMIT
+AS
+select
+  SUM(r.CENA) Przychod
+, SUM(r.CENA) * 0.19 Podatek
+from UMOWY u
+inner join KURSY k on k.KURS_ID = u.KURS_ID
+inner join RODZAJE r on r.RODZAJ_ID = k.RODZAJ_ID
+;
+
+--Zadania - MIGAWKI COMPLETE
+
+--Zadanie 1
+CREATE MATERIALIZED VIEW REP_wykladowcy
+REFRESH COMPLETE
+ON DEMAND
+AS
+select *
+from Wykladowcy
+;
+
+--Zadanie 2
+insert into Wykladowcy (Imie, Nazwisko, Stawka)
+select
+  'Jan'
+, 'Kowalski'
+, 20
+;
+
+--Zadanie 3
+select * from REP_wykladowcy
+;
+
+--Zadanie 4
+EXEC DBMS_MVIEW.refresh('REP_wykladowcy');
+
+--Zadanie 5
+select * from REP_wykladowcy
+;
+
+--Zadanie 6
+CREATE MATERIALIZED VIEW REP_godz_wykladowcy_godziny
+REFRESH COMPLETE
+START WITH Last_Day(SYSDATE)
+NEXT SYSDATE + 1/24
+AS
+select
+  w.IMIE
+, w.NAZWISKO
+, SUM(r.GODZ) GODZINY
+from WYKLADOWCY@filia w
+inner join KURSY@filia k on k.WYKLADOWCA_ID = w.WYKLADOWCA_ID
+inner join RODZAJE@filia r on r.RODZAJ_ID = k.RODZAJ_ID
+group by w.IMIE, w.NAZWISKO
+;
+
+--Zadanie 7
+CREATE MATERIALIZED VIEW REP_kursy
+BUILD IMMEDIATE
+REFRESH COMPLETE
+START WITH SYSDATE
+NEXT SYSDATE + 7
+AS
+select
+  r.NAZWA
+, w.IMIE
+, w.NAZWISKO
+, r.GODZ
+, r.CENA
+from KURSY@filia k
+inner join WYKLADOWCY@filia w on w.WYKLADOWCA_ID = k.WYKLADOWCA_ID
+inner join RODZAJE@filia r on r.RODZAJ_ID = k.RODZAJ_ID
+;
+
+--Zadanie 8
+CREATE VIEW wykladowcyAll AS
+select
+  r.NAZWA
+, w.IMIE
+, w.NAZWISKO
+, r.GODZ
+, r.CENA
+from KURSY@filia k
+inner join WYKLADOWCY@filia w on w.WYKLADOWCA_ID = k.WYKLADOWCA_ID
+inner join RODZAJE@filia r on r.RODZAJ_ID = k.RODZAJ_ID
+union all
+select
+  k.NAZWA
+, k.IMIE
+, k.NAZWISKO
+, k.GODZ
+, k.CENA
+from REP_kursy k
+;
+
+--Zadanie 9
+select * from USER_MVIEWS;
+
+--Zadania - migawki fast
+
+--Zadanie 1
+CREATE MATERIALIZED VIEW kursanciSiedzibaMigawkaFast
+REFRESH FAST
+AS
+select * 
+from KURSANCI@siedziba
+;
+
+--Zadanie 2
+CREATE MATERIALIZED VIEW kursanciOnCommitFast
+REFRESH FAST
+ON COMMIT
+AS
+select * 
+from KURSANCI
+;
+
+--Zadanie 3
+CREATE MATERIALIZED VIEW kursyPrzychod
+BUILD IMMEDIATE
+REFRESH COMPLETE
+ON DEMAND
+AS
+select
+  SUM(r.CENA) Przychod
+, SUM(r.CENA) * 0.19 Podatek
+from UMOWY u
+inner join KURSY k on k.KURS_ID = u.KURS_ID
+inner join RODZAJE r on r.RODZAJ_ID = k.RODZAJ_ID
+;
+
+--Zadanie 4
+CREATE MATERIALIZED VIEW kursyPrzychod
+BUILD IMMEDIATE
+REFRESH FAST
+ON COMMIT
+AS
+select
+  SUM(r.CENA) Przychod
+, SUM(r.CENA) * 0.19 Podatek
+from UMOWY u
+inner join KURSY k on k.KURS_ID = u.KURS_ID
+inner join RODZAJE r on r.RODZAJ_ID = k.RODZAJ_ID
+;
