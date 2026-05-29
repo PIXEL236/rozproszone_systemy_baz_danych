@@ -32,7 +32,7 @@ BEGIN
   select 
     SUM(r.CENA)
   into v_umowy
-  from UMOWYSIEDZIBA u
+  from UMOWY u
   inner join KURSYSIEDZIBA k on k.KURS_ID = u.KURS_ID
   inner join RODZAJESIEDZIBA r on r.RODZAJ_ID = k.RODZAJ_ID
   where u.MIASTO = 'BYDGOSZCZ';
@@ -51,7 +51,7 @@ BEGIN
   select 
     SUM(r.CENA)
   into v_umowy
-  from UMOWYSIEDZIBA u
+  from UMOWY u
   inner join KURSYSIEDZIBA k on k.KURS_ID = u.KURS_ID
   inner join RODZAJESIEDZIBA r on r.RODZAJ_ID = k.RODZAJ_ID
   where u.MIASTO = v_miasto;
@@ -177,3 +177,198 @@ END;
 /
 
 --Zadanie 8
+DECLARE
+  CURSOR c_kursy IS
+    select
+      u.UMOWA_ID
+    , k2.IMIE
+    , k2.NAZWISKO
+    , k.NAZWA
+    , r.CENA
+    from UMOWY u
+    inner join KURSY k on k.KURS_ID = u.KURS_ID
+    inner join RODZAJE r on r.RODZAJ_ID = k.RODZAJ_ID
+    inner join KURSANCI k2 on k2.KURSANT_ID =u.KURSANT_ID 
+    where u.MIASTO = 'BYDGOSZCZ';
+
+  v_kurs c_kursy%ROWTYPE;
+BEGIN
+  OPEN c_kursy;
+
+  LOOP
+    FETCH c_kursy INTO v_kurs;
+    EXIT WHEN c_kursy%NOTFOUND;
+
+    DBMS_OUTPUT.PUT_LINE('Umowa ' || v_kurs || ' | ' v_kurs.IMIE || ' ' || v_kurs.NAZWISKO || ' | ' v_kurs.NAZWA || ' | ' || v_kurs.CENA);
+  END LOOP;
+
+  CLOSE c_kursy;
+END;
+/
+
+--Zadanie 9
+DECLARE
+  CURSOR c_kursy IS
+    select
+      u.UMOWA_ID
+    , k2.IMIE
+    , k2.NAZWISKO
+    , k.NAZWA
+    , r.CENA
+    , u.MIASTO
+    from UMOWY u
+    inner join KURSY@filia k on k.KURS_ID = u.KURS_ID
+    inner join RODZAJE@filia r on r.RODZAJ_ID = k.RODZAJ_ID
+    inner join KURSANCI@filia k2 on k2.KURSANT_ID =u.KURSANT_ID 
+    where u.MIASTO = 'SZCZECIN';
+
+  v_kurs c_kursy%ROWTYPE;
+BEGIN
+  OPEN c_kursy;
+
+  LOOP
+    FETCH c_kursy INTO v_kurs;
+    EXIT WHEN c_kursy%NOTFOUND;
+
+    DBMS_OUTPUT.PUT_LINE('Umowa ' || v_kurs || ' | ' v_kurs.IMIE || ' ' || v_kurs.NAZWISKO || ' | ' v_kurs.NAZWA || ' | ' || v_kurs.CENA || ' | ' || v_kurs.MIASTO);
+  END LOOP;
+
+  CLOSE c_kursy;
+END;
+/
+
+--Zadanie 10
+CREATE OR REPLACE PROCEDURE raport_uczelni()
+AS
+BEGIN
+  DECLARE
+    v_liczba_umow_b NUMBER;
+    v_suma_wartosci_b NUMBER;
+    v_najdrozszy_kurs_b VARCHAR2;
+    v_najpopularniejszy_kurs_b VARCHAR2;
+
+    v_liczba_umow_s NUMBER;
+    v_suma_wartosci_s NUMBER;
+    v_najdrozszy_kurs_s VARCHAR2;
+    v_najpopularniejszy_kurs_s VARCHAR2;
+
+    v_wszystkie_umowy NUMBER;
+    v_wartosc_wszystkich_umow NUMBER;
+  BEGIN
+    SELECT 
+      COUNT(*)
+    INTO v_liczba_umow_b
+    FROM UMOWY u
+    WHERE u.MIASTO = 'BYDGOSZCZ';
+
+    select 
+      SUM(r.CENA)
+    into v_suma_wartosci_b
+    from UMOWY u
+    inner join KURSY k on k.KURS_ID = u.KURS_ID
+    inner join RODZAJ r on r.RODZAJ_ID = k.RODZAJ_ID
+    where u.MIASTO = 'BYDGOSZCZ';
+
+    select
+      k2.NAZWA
+    into v_najdrozszy_kurs_b
+    from
+    (
+      select
+        k.KURS_ID
+      from KURSY k
+      inner join RODZAJ r on r.RODZAJ_ID = k.RODZAJ_ID
+      order by r.CENA desc
+    )k1
+    inner join KURSY k2 on k2.KURS_ID = k1.KURS_ID
+    where rownum = 1;
+
+    select
+      k2.NAZWA
+    into v_najpopularniejszy_kurs_b
+    from
+    (
+      select
+        k.KURS_ID
+      , COUNT(*) Umowy
+      from KURSY k
+      inner join UMOWY u on u.KURS_ID = k.KURS_ID
+      where u.MIASTO = 'BYDGOSZCZ'
+      group by k.KURS_ID
+      order by COUNT(*) desc
+    )k1
+    inner join KURSY k2 on k2.KURS_ID = k1.KURS_ID
+    where rownum = 1;
+
+
+    SELECT 
+      COUNT(*)
+    INTO v_liczba_umow_s
+    FROM UMOWY u
+    WHERE u.MIASTO = 'SZCZECIN';
+
+    select 
+      SUM(r.CENA)
+    into v_suma_wartosci_s
+    from UMOWY u
+    inner join KURSY@filia k on k.KURS_ID = u.KURS_ID
+    inner join RODZAJ@filia r on r.RODZAJ_ID = k.RODZAJ_ID
+    where u.MIASTO = 'SZCZECIN';
+
+    select
+      k2.NAZWA
+    into v_najdrozszy_kurs_s
+    from
+    (
+      select
+        k.KURS_ID
+      from KURSY@filia k
+      inner join RODZAJ@filia r on r.RODZAJ_ID = k.RODZAJ_ID
+      order by r.CENA desc
+    )k1
+    inner join KURSY@filia k2 on k2.KURS_ID = k1.KURS_ID
+    where rownum = 1;
+
+    select
+      k2.NAZWA
+    into v_najpopularniejszy_kurs_s
+    from
+    (
+      select
+        k.KURS_ID
+      , COUNT(*) Umowy
+      from KURSY@filia k
+      inner join UMOWY u on u.KURS_ID = k.KURS_ID
+      where u.MIASTO = 'SZCZECIN'
+      group by k.KURS_ID
+      order by COUNT(*) desc
+    )k1
+    inner join KURSY@filia k2 on k2.KURS_ID = k1.KURS_ID
+    where rownum = 1;
+
+    select
+      v_liczba_umow_b + v_liczba_umow_s
+    into v_wszystkie_umowy;
+
+    select
+      v_suma_wartosci_b + v_suma_wartosci_s
+    into v_wartosc_wszystkich_umow;
+
+    DBMS_OUTPUT.PUT_LINE('Miasto: BYDGOSZCZ');
+    DBMS_OUTPUT.PUT_LINE('Liczba umów:' || v_liczba_umow_b);
+    DBMS_OUTPUT.PUT_LINE('Łączna wartość umów: ' || v_suma_wartosci_b);
+    DBMS_OUTPUT.PUT_LINE('Najdroższy kurs: ' || v_najdrozszy_kurs_b);
+    DBMS_OUTPUT.PUT_LINE('Najdroższy kurs: ' || v_najpopularniejszy_kurs_b);
+
+    DBMS_OUTPUT.PUT_LINE('Miasto: SZCZECIN');
+    DBMS_OUTPUT.PUT_LINE('Liczba umów:' || v_liczba_umow_s);
+    DBMS_OUTPUT.PUT_LINE('Łączna wartość umów: ' || v_suma_wartosci_s);
+    DBMS_OUTPUT.PUT_LINE('Najdroższy kurs: ' || v_najdrozszy_kurs_s);
+    DBMS_OUTPUT.PUT_LINE('Najdroższy kurs: ' || v_najpopularniejszy_kurs_s);
+
+    DBMS_OUTPUT.PUT_LINE('PODSUMOWANIE');
+    DBMS_OUTPUT.PUT_LINE('Liczba wszystkich  umów:' || v_wszystkie_umowy);
+    DBMS_OUTPUT.PUT_LINE('Łączna wartość wszystkich umów: ' || v_wartosc_wszystkich_umow);
+  END;
+END;
+/
