@@ -183,7 +183,7 @@ DECLARE
       u.UMOWA_ID
     , k2.IMIE
     , k2.NAZWISKO
-    , k.NAZWA
+    , r.NAZWA
     , r.CENA
     from UMOWY u
     inner join KURSY k on k.KURS_ID = u.KURS_ID
@@ -213,7 +213,7 @@ DECLARE
       u.UMOWA_ID
     , k2.IMIE
     , k2.NAZWISKO
-    , k.NAZWA
+    , r.NAZWA
     , r.CENA
     , u.MIASTO
     from UMOWY u
@@ -270,7 +270,7 @@ BEGIN
     where u.MIASTO = 'BYDGOSZCZ';
 
     select
-      k2.NAZWA
+      r.NAZWA
     into v_najdrozszy_kurs_b
     from
     (
@@ -281,10 +281,11 @@ BEGIN
       order by r.CENA desc
     )k1
     inner join KURSY k2 on k2.KURS_ID = k1.KURS_ID
+    inner join RODZAJ r on r.RODZAJ_ID = k2.RODZAJ_ID
     where rownum = 1;
 
     select
-      k2.NAZWA
+      r.NAZWA
     into v_najpopularniejszy_kurs_b
     from
     (
@@ -298,6 +299,7 @@ BEGIN
       order by COUNT(*) desc
     )k1
     inner join KURSY k2 on k2.KURS_ID = k1.KURS_ID
+    inner join RODZAJ r on r.RODZAJ_ID = k2.RODZAJ_ID
     where rownum = 1;
 
 
@@ -316,7 +318,7 @@ BEGIN
     where u.MIASTO = 'SZCZECIN';
 
     select
-      k2.NAZWA
+      r.NAZWA
     into v_najdrozszy_kurs_s
     from
     (
@@ -327,10 +329,11 @@ BEGIN
       order by r.CENA desc
     )k1
     inner join KURSY@filia k2 on k2.KURS_ID = k1.KURS_ID
+    inner join RODZAJ r on r.RODZAJ_ID = k2.RODZAJ_ID
     where rownum = 1;
 
     select
-      k2.NAZWA
+      r.NAZWA
     into v_najpopularniejszy_kurs_s
     from
     (
@@ -344,6 +347,7 @@ BEGIN
       order by COUNT(*) desc
     )k1
     inner join KURSY@filia k2 on k2.KURS_ID = k1.KURS_ID
+    inner join RODZAJ r on r.RODZAJ_ID = k2.RODZAJ_ID
     where rownum = 1;
 
     select
